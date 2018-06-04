@@ -24,6 +24,7 @@ with GMP 6.1.2 and OpenMP for parallelization:
 |sqrt       | 3.6       | 2.9       | 3.9       | 4.0       | 4.4       | 4.6       | 3.9              |
 |gcd        | 3.2       | 4.4       | 4.9       | 4.8       | 4.3       | 3.9       | 4.3              |
 |mod inv    | 2.5       | 3.2       | 3.6       | 3.3       | 3.1       | 3.0       | 3.1              |
+
 &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; **SPEED-UP TABLE:  TELSA V100 vs. Xeon E5-2997a at 2.6 GHz (16 cores)**
 
 These performance results were generated with the perf_tests tools provided with the library.
