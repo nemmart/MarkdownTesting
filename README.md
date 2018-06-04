@@ -24,6 +24,7 @@ with GMP 6.1.2 and OpenMP for parallelization:
 |sqrt       | 3.6       | 2.9       | 3.9       | 4.0       | 4.4       | 4.6       | 3.9              |
 |gcd        | 3.2       | 4.4       | 4.9       | 4.8       | 4.3       | 3.9       | 4.3              |
 |mod inv    | 2.5       | 3.2       | 3.6       | 3.3       | 3.1       | 3.0       | 3.1              |
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; **SPEED-UP TABLE:  TELSA V100 vs. Xeon E5-2997a at 2.6 GHz (16 cores)**
 
 These performance results were generated with the perf_tests tools provided with the library.
 
@@ -46,7 +47,7 @@ CGBN also requires the Google Test framework source.  If this is installed on yo
 if it's not installed, we provide a `make download-gtest` in the main CGBN makefile that will download and unpack the Google Test framework into the CGBN
 directory, where all the makefiles will find it automatically.
 
-Once GMP and the Google Test framework are set up, the CGBN samples, unit tests, and performance tests can be built with `make _arch_` where _arch_ is one 
+Once GMP and the Google Test framework are set up, the CGBN samples, unit tests, and performance tests can be built with `make <arch>` where _\<arch\>_ is one 
 of kepler, maxwell, pascal, volta.   The compilation takes several minutes due to the large number of kernels that must built.
 
 ### Running Unit Tests
@@ -67,3 +68,7 @@ file.   Speedups are easily computed by loading the two .csv files into a spread
 
 
 ### Limitations
+
+The CGBN APIs currently have a number of limitations:
+
+*  At present, 
