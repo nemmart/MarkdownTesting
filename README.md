@@ -1,5 +1,7 @@
 ### XMP 2.0 Beta Release (Oct 2018)
 
+Some new junk
+
 The XMP 2.0 library provides a set of APIs for doing fixed size, unsigned multiple precision integer arithmetic in CUDA.   The library provides these APIs under the name Cooperative Groups Big Numbers (CGBN).   The idea is that a cooperative group of threads will work together to represent and process operations on each big numbers.   This beta release targets high performance on small to medium sized big numbers:  32 bits through 32K bits (in 32 bit increments) and operates with 4, 8, 16 or 32 threads per CGBN group / big number instance.
 
 ### Why use CGBN?
