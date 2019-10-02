@@ -102,6 +102,7 @@ For each layer, there is a text file that describes the layer structure and then
 
 For example, the “model/conv1” file contains the following text:
 
+```
 Conv2d                 	   	layer type: convolution layer
 compute_mode=s8s8s32  	s8 activations, s8 weights, s32 accumulation/output
 in_channels=3                 	3 input channel (r, g, b)
@@ -115,6 +116,7 @@ bias=s16,1:64                 	bias vector, s16 datatype, 1 dimension, size 64
 !model/npdata/conv1.bias     	location of the bias data
 weight=s8,4:64 3 7 7         	weight tensor, s8 data, 4 dims, KCRS
 !model/npdata/conv1.weight   	location of the weight data
+```
 
 These files are largely self-explanatory and have the same semantics as the standard ResNet layers.  The one exception is a quantize / dequantize layer.   Here’s an example quantize, “model/quantize1”:
 
