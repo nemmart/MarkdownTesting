@@ -103,42 +103,50 @@ For each layer, there is a text file that describes the layer structure and then
 For example, the “model/conv1” file contains the following text:
 
 <pre>
-Conv2d                          <i>layer type: convolution layer</i>
-compute_mode=s8s8s32  	        <i>s8 activations, s8 weights, s32 accumulation/output</i>
-in_channels=3                 	<i>3 input channel (r, g, b)</i>
-out_channels=64               	<i>64 output channels</i>
-kernel_size=2:7 7            	<i>kernel size tuple (2 dimension) 7x7</i>
-stride=2:2 2                    <i>stride tuple (2 dimensions) 2, 2</i>
-padding=2:3 3                 	<i>padding tuple (2 dimensions) 3, 3</i>
-dilation=2:1 1                	<i>dilation tuple (2 dimensions) 1, 1</i>
-groups=1                      	<i>groups parameter is 1</i>
-bias=s16,1:64                 	<i>bias vector, s16 datatype, 1 dimension, size 64</i>
-!model/npdata/conv1.bias     	<i>location of the bias data</i>
-weight=s8,4:64 3 7 7         	<i>weight tensor, s8 data, 4 dims, KCRS</i>
-!model/npdata/conv1.weight   	<i>location of the weight data</i>
+Conv2d                                    <i>layer type: convolution layer</i>
+compute_mode=s8s8s32  	                  <i>s8 activations, s8 weights, s32 accumulation/output</i>
+in_channels=3                 	          <i>3 input channel (r, g, b)</i>
+out_channels=64               	          <i>64 output channels</i>
+kernel_size=2:7 7            	          <i>kernel size tuple (2 dimension) 7x7</i>
+stride=2:2 2                              <i>stride tuple (2 dimensions) 2, 2</i>
+padding=2:3 3                 	          <i>padding tuple (2 dimensions) 3, 3</i>
+dilation=2:1 1                	          <i>dilation tuple (2 dimensions) 1, 1</i>
+groups=1                      	          <i>groups parameter is 1</i>
+bias=s16,1:64                 	          <i>bias vector, s16 datatype, 1 dimension, size 64</i>
+!model/npdata/conv1.bias     	          <i>location of the bias data</i>
+weight=s8,4:64 3 7 7         	          <i>weight tensor, s8 data, 4 dims, KCRS</i>
+!model/npdata/conv1.weight   	          <i>location of the weight data</i>
 </pre>
 
 These files are largely self-explanatory and have the same semantics as the standard ResNet layers.  The one exception is a quantize / dequantize layer.   Here’s an example quantize, “model/quantize1”:
 
-Quantize                             			Layer type: quantize layer
-compute_mode=u31u16u4        			u31 inputs, u16 weights, u4 outputs
-output_bits=4                        			output is 4 bits wide
-shift_bits=16                        			described below
-max_requant=71                      			maximum value in the u16 data
-requant_factor=u16,4:1 64 1 1   			scale tensor, u16 data, 64 input/output chans
-!model/npdata/quantize1.requant_factor 		Location of scale data
+<pre>
+Quantize                                  <i>Layer type: quantize layer</i>
+compute_mode=u31u16u4                     <i>u31 inputs, u16 weights, u4 outputs</i>
+output_bits=4                             <i>output is 4 bits wide</i>
+shift_bits=16                             <i>described below</i>
+max_requant=71                            <i>maximum value in the u16 data</i>
+requant_factor=u16,4:1 64 1 1   	  <i>scale tensor, u16 data, 64 input/output chans</i>
+!model/npdata/quantize1.requant_factor    <i>Location of scale data</i>
+</pre>
 
 For each input, a quantize layer does fixed point arithmetic and computes:
 
-half = 2^shift_bits / 2
-out[channel] = (±in[channel] * requant_factor[channel] ± half) / 2^shift_bits
-clamp out[channel] to appropriate range, in this example u4 (0..15)
+```
+      half = 2^shift_bits / 2
+      out[channel] = (±in[channel] * requant_factor[channel] ± half) / 2^shift_bits
+      clamp out[channel] to appropriate range, in this example u4 (0..15)
+```
 
 Quantization layers can also be used to de-quantize, for example, “model/layer1_0_downsample_2”, which has a compute_mode of “s8u16s32”, 31 output bits and a shift_bits of 0.   The quantization layer rounds positive value ties towards +inf and negative value ties towards -inf.
 
 
 4.       FINE TUNING THE MODEL WEIGHTS
-Post training quantizing to int4 can’t preserve enough accuracy, so the network needs to be fine tuned. Fake quantization is added into forward propagation. Since quantization is either not differentiable or has derivative 0 depends on the input value, we use Straight Through Estimator (STE) to approximate its derivative during backward propagation: .
-Quantization of each tensor is defined by range. We determine the range by 99.999% percentile calibration for both activation and weight. Values outside the range are clamped. A hHistogram of weights is collected on the pretrained model weights. For activation, we fed 512 images in training set to collect the histogram. After determininged the range offline, we fine tune the quantized network for 15 epochs. The pretrained model is from torchvision.
+Post training quantizing to int4 can’t preserve enough accuracy, so the network needs to be fine tuned. Fake quantization is added into 
+forward propagation. Since quantization is either not differentiable or has derivative 0 depends on the input value, we use Straight Through 
+Estimator (STE) to approximate its derivative during backward propagation: . Quantization of each tensor is defined by range. We determine the 
+range by 99.999% percentile calibration for both activation and weight. Values outside the range are clamped. A hHistogram of weights is 
+collected on the pretrained model weights. For activation, we fed 512 images in training set to collect the histogram. After determininged 
+the range offline, we fine tune the quantized network for 15 epochs. The pretrained model is from torchvision.
  
 
