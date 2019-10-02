@@ -102,19 +102,21 @@ For each layer, there is a text file that describes the layer structure and then
 
 For example, the “model/conv1” file contains the following text:
 
->Conv2d                         <i>layer type: convolution layer</i>
->compute_mode=s8s8s32  	        s8 activations, s8 weights, s32 accumulation/output
->in_channels=3                 	3 input channel (r, g, b)
->out_channels=64               	64 output channels
->kernel_size=2:7 7            	kernel size tuple (2 dimension) 7x7
->stride=2:2 2                   stride tuple (2 dimensions) 2, 2
->padding=2:3 3                 	padding tuple (2 dimensions) 3, 3
->dilation=2:1 1                	dilation tuple (2 dimensions) 1, 1
->groups=1                      	groups parameter is 1
->bias=s16,1:64                 	bias vector, s16 datatype, 1 dimension, size 64
->!model/npdata/conv1.bias     	location of the bias data
->weight=s8,4:64 3 7 7         	weight tensor, s8 data, 4 dims, KCRS
->!model/npdata/conv1.weight   	location of the weight data
+<pre>
+Conv2d                          <i>layer type: convolution layer</i>
+compute_mode=s8s8s32  	        <i>s8 activations, s8 weights, s32 accumulation/output</i>
+in_channels=3                 	<i>3 input channel (r, g, b)</i>
+out_channels=64               	<i>64 output channels</i>
+kernel_size=2:7 7            	<i>kernel size tuple (2 dimension) 7x7</i>
+stride=2:2 2                    <i>stride tuple (2 dimensions) 2, 2</i>
+padding=2:3 3                 	<i>padding tuple (2 dimensions) 3, 3</i>
+dilation=2:1 1                	<i>dilation tuple (2 dimensions) 1, 1</i>
+groups=1                      	<i>groups parameter is 1</i>
+bias=s16,1:64                 	<i>bias vector, s16 datatype, 1 dimension, size 64</i>
+!model/npdata/conv1.bias     	<i>location of the bias data</i>
+weight=s8,4:64 3 7 7         	<i>weight tensor, s8 data, 4 dims, KCRS</i>
+!model/npdata/conv1.weight   	<i>location of the weight data</i>
+</pre>
 
 These files are largely self-explanatory and have the same semantics as the standard ResNet layers.  The one exception is a quantize / dequantize layer.   Here’s an example quantize, “model/quantize1”:
 
