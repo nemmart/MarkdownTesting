@@ -16,7 +16,7 @@ Important files for our INT4 submission:
 
 |File|Description|
 |---|---|
-|benchmarks/ResNet50-Int4/int4_offline.a                          |ResNet50 INT4 inference engine and benchmark implementation provided as library|
+|benchmarks/ResNet50-Int4/int4_offline.a                          |ResNet50 INT4 inference engine and benchmark implementation provided as a library|
 |harness/harness_offline/harness_offline_int4/src/SampleLibrary.cc|These files are made available to show how QSL is implemented by the harness.  The binary file int4_offline.a already comes pre-compiled with this implementation and as such these files are for reference only and don’t participate in re-compilation.|
 |harness/harness_offline/harness_offline_int4/inc/SampleLibrary.h |QSL header file.|
 |harness/harness_offline/harness_offline_int4/Makefile            |Makefile used to link the int4_offline executable. Links against mlperf_loadgen.so and int4_offline.a (QSL, SUT and INT4 inference engine)|
@@ -35,7 +35,8 @@ To run the INT4 tool:
 |-a \<filename\>| Load the config number for each conv layer from \<filename\>|
 |--test-mode \<mode\>|Loadgen test mode, where \<mode\> is {SubmissionRun, PerformanceOnly, AccuracyOnly}|
 
-Loadgen test/log settings related options:
+LoadGen test/log settings related options:
+
 Most of the LoadGen supported test and log settings can be passed as command line arguments.  The prefix lgts is used for loadgen test setting parameters, while prefix lgls is used for LoadGen log setting parameters.
 
 Example command line:
@@ -134,12 +135,12 @@ Quantization layers can also be used to de-quantize, for example, “model/layer1_
 ## 3. How the Model was Fine Tuned
 
 For INT8 inference, the standard technique is to take the trained network, run a calibration dataset and use the results to
-set the quantization parameters for the layers.  Unfortunately, using this technique for INT4 doesn't work well.  Too much
-information is lost during the quantization and the network accuracy suffers badly.   To resolve this problem, we start with a
-pre-trained model (the standard torchvision model).  We run a calibration dataset and collect range and histogram data for both
-activations and model weights.   Next, we add "fake" FP32 quantization layers to model.  The initial parameters for these 
-quantization layers are set using the collected range data.  Note, it's still an all FP32 model.  Then we run training epochs 
-to fine tune the network and quantization layers. The process works as follows:
+quantize the convolution layers.   Unfortunately, using this technique for INT4 doesn't work well.  Too much information is 
+lost during the quantization and the network accuracy suffers badly.   To resolve this problem, we start with a pre-trained 
+model (the standard torchvision model).  We run a calibration dataset and collect range and histogram data for both activations 
+and model weights.   Next, we add "fake" FP32 quantization layers to model.  The initial parameters for these quantization 
+layers are set using the collected range data.  Note, it's still an all FP32 model.  Then we run training epochs to fine tune 
+the network and quantization layers. The process works as follows:
 
 1)  Run the calibration dataset through the "quantized" FP32 model and collect histogram data
 2)  Use KL divergence to choose new quantization ranges that minimize information loss between the histograms
@@ -149,7 +150,7 @@ to fine tune the network and quantization layers. The process works as follows:
 
 Continue training until the accuracy reaches acceptable levels, typically about 15 epochs.  Once complete, the model is fine
 tuned and a quantized INT4 model can be generated using the range data from the "fake" quantization layers.  For more 
-information about the fine tuning process, please see: ....
+information about the fine tuning process, please see: \<INSERT PAPER TITLE HERE\>
 
 
 
