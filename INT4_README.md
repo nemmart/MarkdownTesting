@@ -10,31 +10,23 @@ The remainder of this document is organized as follows.   Section 1 describes ho
 Section 2 discusses re-linking the tools with alternate LoadGen routines.  Section 3 describes the model format and computations performed. 
 Section 4 describes the process used to fine tune the model weights.
 
-## 1. FILES LOCATIONS AND RUNNING THE SOFTWARE
+## 1. Important Files & Running the Harness
 
-Most of the files are in the folder "Harness/harness_offline/harness/offline_int4".  Here you'll find:
+Important files for our INT4 submission:
 
 |File|Description|
 |---|---|
-|int4_offline|The INT4 harness executable|
-|model|The INT4 model directory, described in the next section|
-|Makefile|This file provides a recipe to produce int4_offline executable by linking int4_offline.a with mlperf_loadgen.so 
-          which is separately built and is located at (inference/loadgen/build/ lib.linux-x86_64-2.7)|
+|benchmarks/ResNet50-Int4/int4_offline.a                          |ResNet50 INT4 inference engine and benchmark implementation provided as library|
+|harness/harness_offline/harness_offline_int4/src/SampleLibrary.cc|These files are made available to show how QSL is implemented by the harness.  The
+                                                                   binary file int4_offline.a already comes pre-compiled with this implementation and
+                                                                   as such these files are for reference only and don’t participate in re-compilation.|
+|harness/harness_offline/harness_offline_int4/inc/SampleLibrary.h |QSL header file.|
+|harness/harness_offline/harness_offline_int4/Makefile            |Makefile used to link the int4_offline executable. Links against mlperf_loadgen.so and int4_offline.a 
+                                                                   (QSL, SUT and INT4 inference engine)|
+|harness/harness_offline/harness_offline_int4/int4_offline        |INT4 harness executable|
+|harness/harness_offline/harness_offline_int4/model               |The INT4 model directory, described in the next section|
 
-
-
--          benchmarks/ResNet50-Int4/int4_offline.a
-ResNet50 INT4 benchmark implementation provided as binary.
--          Harness/harness_offline/harness_offline_int4/inc/SampleLibrary.h
--          Harness/harness_offline/harness_offline_int4/src/SampleLibrary.cc
-These files are made available to show how QSL is implemented by the harness.  The binary file int4_offline.a already comes pre-compiled with this implementation and as such these files are for reference only and don’t participate in re-compilation.
--          Harness/harness_offline/harness_offline_int4/Makefile
-This file provides a recipe to produce int4_offline executable by linking int4_offline.a with mlperf_loadgen.so which is separately built and is located at (inference/loadgen/build/ lib.linux-x86_64-2.7). 
--          Harness/harness_offline/harness_offline_int4/model
-This is described in detail later in Section 3.
--          Harness/harness_offline/harness_offline_int4/int4_offline
-The INT4 harness executable.
-Useful instructions for executing INT4 harness:
+To run the INT4 tool:
 -          ./int4_offline -h/--help shows the available command line options
  
 Useful options:
