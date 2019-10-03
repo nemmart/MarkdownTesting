@@ -27,13 +27,13 @@ To run the INT4 tool:
 
 ```./int4_offline -h/--help shows the available command line options```
  
-|Useful options:||
+|Useful&nbsp;options:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;||
 |---|---|
-|-b&#160;/&#160;--batch_size&#160;<n>|This is equivalent to perfSampleCount in loadgen terminology and defines how many images are processed per batch. (Max supported value: Tesla T4: 512, Titan RTX: 1024)|
-|-p&#160;/&#160;--tensorPath&#160;<path>|Disk location <path> for sample images|
-|-m&#160;/&#160;--mapPath&#160;<path>|Disk location <path> for val_map.txt file which contains filenames and labels|
-|-a&#160;<filename>| Load the config number for each conv layer from <filename>|
-|--test-mode&#160;<mode>|Loadgen test mode.  {SubmissionRun, PerformanceOnly, AccuracyOnly}|
+|-b / --batch_size <n>|This is equivalent to perfSampleCount in loadgen terminology and defines how many images are processed per batch. (Max supported value: Tesla T4: 512, Titan RTX: 1024)|
+|-p / --tensorPath <path>|Disk location <path> for sample images|
+|-m / --mapPath <path>|Disk location <path> for val_map.txt file which contains filenames and labels|
+|-a <filename>| Load the config number for each conv layer from <f>|
+|--test-mode <mode>|Loadgen test mode.  {SubmissionRun, PerformanceOnly, AccuracyOnly}|
 
 Loadgen test/log settings related options:
 Most of the loadgen supported test and log settings can be passed as command line arguments.  The prefix lgts is used for loadgen test setting parameters, while prefix lgls is used for loadgen log setting parameters.
