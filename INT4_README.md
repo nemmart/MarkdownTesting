@@ -24,19 +24,19 @@ Important files for our INT4 submission:
 |harness/harness_offline/harness_offline_int4/model               |The INT4 model directory, described in the next section|
 
 To run the INT4 tool:
--          ./int4_offline -h/--help shows the available command line options
+`./int4_offline -h/--help shows the available command line options`
  
 Useful options:
--b / --batch_size <n> : This is equivalent to perfSampleCount in loadgen terminology and defines how many images are processed per batch. (Max supported value: Tesla T4: 512, Titan RTX: 1024)
--p / --tensorPath <path>: Disk location <path> for sample images
--m / --mapPath <path>: Disk location <path> for val_map.txt file which contains filenames and labels.
--a <filename>: Load the config number for each conv layer from <f>.
---test-mode: Loadgen test mode.  {SubmissionRun, PerformanceOnly, AccuracyOnly}
+|-b / --batch_size <n>|This is equivalent to perfSampleCount in loadgen terminology and defines how many images are processed per batch. (Max supported value: Tesla T4: 512, Titan RTX: 1024)|
+|-p / --tensorPath <path>|Disk location <path> for sample images|
+|-m / --mapPath <path>|Disk location <path> for val_map.txt file which contains filenames and labels|
+|-a <filename>| Load the config number for each conv layer from <f>|
+|--test-mode <mode>|Loadgen test mode.  {SubmissionRun, PerformanceOnly, AccuracyOnly}|
 
 Loadgen test/log settings related options:
 Most of the loadgen supported test and log settings can be passed as command line arguments.  The prefix lgts is used for loadgen test setting parameters, while prefix lgls is used for loadgen log setting parameters.
 Example command line:
--          int4_offline -b 512 -a autoconfig_bs256 --test-mode PerformanceOnly --tensorPath /path/to/sample/images --mapPath ../../../data_maps/imagenet/val_map.txt
+`int4_offline -b 512 -a autoconfig_bs256 --test-mode PerformanceOnly --tensorPath /path/to/sample/images --mapPath ../../../data_maps/imagenet/val_map.txt`
  
 ## 2. MODEL DESCRIPTION
 
