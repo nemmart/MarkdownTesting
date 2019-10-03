@@ -17,12 +17,9 @@ Important files for our INT4 submission:
 |File|Description|
 |---|---|
 |benchmarks/ResNet50-Int4/int4_offline.a                          |ResNet50 INT4 inference engine and benchmark implementation provided as library|
-|harness/harness_offline/harness_offline_int4/src/SampleLibrary.cc|These files are made available to show how QSL is implemented by the harness.  The
-                                                                   binary file int4_offline.a already comes pre-compiled with this implementation and
-                                                                   as such these files are for reference only and don’t participate in re-compilation.|
+|harness/harness_offline/harness_offline_int4/src/SampleLibrary.cc|These files are made available to show how QSL is implemented by the harness.  The binary file int4_offline.a already comes pre-compiled with this implementation and as such these files are for reference only and don’t participate in re-compilation.|
 |harness/harness_offline/harness_offline_int4/inc/SampleLibrary.h |QSL header file.|
-|harness/harness_offline/harness_offline_int4/Makefile            |Makefile used to link the int4_offline executable. Links against mlperf_loadgen.so and int4_offline.a 
-                                                                   (QSL, SUT and INT4 inference engine)|
+|harness/harness_offline/harness_offline_int4/Makefile            |Makefile used to link the int4_offline executable. Links against mlperf_loadgen.so and int4_offline.a (QSL, SUT and INT4 inference engine)|
 |harness/harness_offline/harness_offline_int4/int4_offline        |INT4 harness executable|
 |harness/harness_offline/harness_offline_int4/model               |The INT4 model directory, described in the next section|
 
