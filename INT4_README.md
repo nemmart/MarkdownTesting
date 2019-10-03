@@ -6,11 +6,9 @@ code loads the fine tuned and quantized network from the “model” directory, whic
 a full ResNet50-v1.5 pipeline, no layers have been pruned or altered, other than using low precision activations and weights.  Internally, the
 code does fuse layers to save bandwidth and produce an efficient high performance inference engine, which is used to process the LoadGen data.
 
-The remainder of this document is organized as follows.   Section 1 describes how to run the inference engine and various command line arguments.
-Section 2 discusses re-linking the tools with alternate LoadGen routines.  Section 3 describes the model format and computations performed. 
-Section 4 describes the process used to fine tune the model weights.
-
-
+The remainder of this document is organized as follows.   Section 1 describes the file layout and how to run the harness.  Section 2 describes
+the model format and computation performed.  Section 3 discusses the process that was used to fine tune the model weight.  Section 4 discusses
+re-linking the tools with alternate LoadGen routines.
 
 ## 1. Important Files & Running the Harness
 
@@ -46,7 +44,7 @@ Example command line:
  
  
 
-## 2. MODEL DESCRIPTION
+## 2. Model Description
 
 The INT4 ResNet50 network consists of a pipeline of layers, described by files in the “model” directory.  At the top level, we have the following layers:
 
@@ -131,7 +129,9 @@ For each input, a quantize layer does fixed point arithmetic and computes:
 
 Quantization layers can also be used to de-quantize, for example, “model/layer1_0_downsample_2”, which has a compute_mode of “s8u16s32”, 31 output bits and a shift_bits of 0.   The quantization layer rounds positive value ties towards +inf and negative value ties towards -inf.
 
-## 3. HOW THE MODEL WAS FINE TUNED
+
+
+## 3. How the Model was Fine Tuned
 
 For INT8 inference, the standard technique is to take the trained network, run a calibration dataset and use the results to
 set the quantization parameters for the layers.  Unfortunately, using this technique for INT4 doesn't work well.  Too much
