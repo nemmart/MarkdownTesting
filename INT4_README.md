@@ -10,7 +10,7 @@ The remainder of this document is organized as follows.   Section 1 describes ho
 Section 2 discusses re-linking the tools with alternate LoadGen routines.  Section 3 describes the model format and computations performed. 
 Section 4 describes the process used to fine tune the model weights.
 
-##1. FILES LOCATIONS AND RUNNING THE SOFTWARE
+## 1. FILES LOCATIONS AND RUNNING THE SOFTWARE
 
 Most of the files are in the folder "Harness/harness_offline/harness/offline_int4".  Here you'll find:
 
@@ -49,7 +49,7 @@ Most of the loadgen supported test and log settings can be passed as command lin
 Example command line:
 -          int4_offline -b 512 -a autoconfig_bs256 --test-mode PerformanceOnly --tensorPath /path/to/sample/images --mapPath ../../../data_maps/imagenet/val_map.txt
  
-##2. MODEL DESCRIPTION
+## 2. MODEL DESCRIPTION
 
 The INT4 ResNet50 network consists of a pipeline of layers, described by files in the “model” directory.  At the top level, we have the following layers:
 
@@ -134,7 +134,7 @@ For each input, a quantize layer does fixed point arithmetic and computes:
 
 Quantization layers can also be used to de-quantize, for example, “model/layer1_0_downsample_2”, which has a compute_mode of “s8u16s32”, 31 output bits and a shift_bits of 0.   The quantization layer rounds positive value ties towards +inf and negative value ties towards -inf.
 
-##3. HOW THE MODEL WAS FINE TUNED
+## 3. HOW THE MODEL WAS FINE TUNED
 
 For INT8 inference, the standard technique is to take the trained network, run a calibration dataset and use the results to
 set the quantization parameters for the layers.  Unfortunately, using this technique for INT4 doesn't work well.  Too much
@@ -154,7 +154,7 @@ Continue training until the accuracy reaches acceptable levels, typically about 
 tuned and a quantized INT4 model can be generated using the range data from the "fake" quantization layers.  For more 
 information about the fine tuning process, please see: ....
 
-##4. RE-LINKING WITH ALTERNATE LOADGEN TOOLS
+## 4. RE-LINKING WITH ALTERNATE LOADGEN TOOLS
  
 There might be a desire to run the INT4 harness with a user-specified loadgen library. 
 
