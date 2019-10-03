@@ -10,6 +10,8 @@ The remainder of this document is organized as follows.   Section 1 describes ho
 Section 2 discusses re-linking the tools with alternate LoadGen routines.  Section 3 describes the model format and computations performed. 
 Section 4 describes the process used to fine tune the model weights.
 
+
+
 ## 1. Important Files & Running the Harness
 
 Important files for our INT4 submission:
@@ -36,12 +38,14 @@ To run the INT4 tool:
 |--test-mode \<mode\>|Loadgen test mode, where \<mode\> is {SubmissionRun, PerformanceOnly, AccuracyOnly}|
 
 Loadgen test/log settings related options:
-Most of the loadgen supported test and log settings can be passed as command line arguments.  The prefix lgts is used for loadgen test setting parameters, while prefix lgls is used for loadgen log setting parameters.
+Most of the LoadGen supported test and log settings can be passed as command line arguments.  The prefix lgts is used for loadgen test setting parameters, while prefix lgls is used for LoadGen log setting parameters.
 
 Example command line:
 
 ```int4_offline -b 512 -a autoconfig_bs256 --test-mode PerformanceOnly --tensorPath /path/to/sample/images --mapPath ../../../data_maps/imagenet/val_map.txt```
  
+ 
+
 ## 2. MODEL DESCRIPTION
 
 The INT4 ResNet50 network consists of a pipeline of layers, described by files in the “model” directory.  At the top level, we have the following layers:
@@ -147,22 +151,29 @@ Continue training until the accuracy reaches acceptable levels, typically about 
 tuned and a quantized INT4 model can be generated using the range data from the "fake" quantization layers.  For more 
 information about the fine tuning process, please see: ....
 
-## 4. RE-LINKING WITH ALTERNATE LOADGEN TOOLS
+
+
+## 4. Re-linking with Alternate LoadGen Tools
  
 There might be a desire to run the INT4 harness with a user-specified loadgen library. 
 
-It is assumed that the user has pre-compiled mlperf_loadgen.so by following these steps (ref: https://github.com/mlperf/inference/blob/master/loadgen/README_BUILD.md):
+It is assumed that the user has pre-compiled mlperf_loadgen.so by following these steps (ref: `https://github.com/mlperf/inference/blob/master/loadgen/README_BUILD.md`):
 
+
+```
 git clone --recurse-submodules https://github.com/mlperf/inference.git mlperf_inference
 
 LOADGEN_DIR=<Path> (e.g. ${PWD}/mlperf_inference/inference/loadgen)
 CUDA_PATH=<Path for CUDA toolkit e.g. /usr/local/cuda-10.1>
 cd $LOADGEN_ DIR
 CFLAGS="-std=c++14 -O3" python setup.py bdist_wheel
+```
 
 To produce a new int4_offline executable, the following command can be used:
 
-```cd harness/harness_offline/harness_offline_int4
+```
+cd harness/harness_offline/harness_offline_int4
 make -j CUDA=${CUDA_PATH} LOADGEN_PATH=${LOADGEN_DIR} clean
-make -j CUDA=${CUDA_PATH} LOADGEN_PATH=${LOADGEN_DIR} all```
+make -j CUDA=${CUDA_PATH} LOADGEN_PATH=${LOADGEN_DIR} all
+```
 
