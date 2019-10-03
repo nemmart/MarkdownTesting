@@ -2,16 +2,27 @@ This document provides a brief overview our INT4 submission for MLPerf inference
 NVIDIA to assess the performance and accuracy of INT4 inference on Turing. 
 
 The code uses a ResNet50-v1.5 pipeline, where the weights have been fine tuned to allow accurate inference using INT4 residual layers.  The 
-code loads the fine tuned network from the “model” directory, which is used to drive the computation.  Internally, the code aggressively fuses 
-layers to produce an efficient high performance inference engine which is used to process the Load Gen data.
+code loads the fine tuned and quantized network from the “model” directory, which is used to drive the computation.  It's worth noting we use
+a full ResNet50-v1.5 pipeline, no layers have been pruned or altered, other than using low precision activations and weights.  Internally, the
+code does fuse layers to save bandwidth and produce an efficient high performance inference engine, which is used to process the LoadGen data.
 
 The remainder of this document is organized as follows.   Section 1 describes how to run the inference engine and various command line arguments.
-Section 2 discusses re-linking the tools with alternate LloadGgen routines.  Section 3 describes the model format and computations performed. 
+Section 2 discusses re-linking the tools with alternate LoadGen routines.  Section 3 describes the model format and computations performed. 
 Section 4 describes the process used to fine tune the model weights.
 
-1.       RUNNING AND COMMAND LINE ARGUMENTS
-Following files are relevant for INT4 harness: 
-<TBD – The paths may get changed as per submission guidelines>
+##1. FILES LOCATIONS AND RUNNING THE SOFTWARE
+
+Most of the files are in the folder "Harness/harness_offline/harness/offline_int4".  Here you'll find:
+
+|File|Description|
+|---|---|
+|int4_offline|The INT4 harness executable|
+|model|The INT4 model directory, described in the next section|
+|Makefile|This file provides a recipe to produce int4_offline executable by linking int4_offline.a with mlperf_loadgen.so 
+          which is separately built and is located at (inference/loadgen/build/ lib.linux-x86_64-2.7)|
+
+
+
 -          benchmarks/ResNet50-Int4/int4_offline.a
 ResNet50 INT4 benchmark implementation provided as binary.
 -          Harness/harness_offline/harness_offline_int4/inc/SampleLibrary.h
@@ -38,25 +49,8 @@ Most of the loadgen supported test and log settings can be passed as command lin
 Example command line:
 -          int4_offline -b 512 -a autoconfig_bs256 --test-mode PerformanceOnly --tensorPath /path/to/sample/images --mapPath ../../../data_maps/imagenet/val_map.txt
  
-2.       RE-LINKING WITH ALTERNATE LOADGEN TOOLS
- 
-There might be a desire to run the INT4 harness with a user-specified loadgen library. 
+##2. MODEL DESCRIPTION
 
-It is assumed that the user has pre-compiled mlperf_loadgen.so by following these steps (ref: https://github.com/mlperf/inference/blob/master/loadgen/README_BUILD.md):
-
-git clone --recurse-submodules https://github.com/mlperf/inference.git mlperf_inference
-
-LOADGEN_DIR=<Path> (e.g. ${PWD}/mlperf_inference/inference/loadgen)
-CUDA_PATH=<Path for CUDA toolkit e.g. /usr/local/cuda-10.1>
-cd $LOADGEN_ DIR
-CFLAGS="-std=c++14 -O3" python setup.py bdist_wheel
-
-To produce a new int4_offline executable, the following command can be used:
-            	cd harness/harness_offline/harness_offline_int4
-            	make -j CUDA=${CUDA_PATH} LOADGEN_PATH=${LOADGEN_DIR} clean
-            	make -j CUDA=${CUDA_PATH} LOADGEN_PATH=${LOADGEN_DIR} all
-
-3.       THE MODEL
 The INT4 ResNet50 network consists of a pipeline of layers, described by files in the “model” directory.  At the top level, we have the following layers:
 
 |Main Pipeline|
@@ -140,13 +134,41 @@ For each input, a quantize layer does fixed point arithmetic and computes:
 
 Quantization layers can also be used to de-quantize, for example, “model/layer1_0_downsample_2”, which has a compute_mode of “s8u16s32”, 31 output bits and a shift_bits of 0.   The quantization layer rounds positive value ties towards +inf and negative value ties towards -inf.
 
+##3. HOW THE MODEL WAS FINE TUNED
 
-4.       FINE TUNING THE MODEL WEIGHTS
-Post training quantizing to int4 can’t preserve enough accuracy, so the network needs to be fine tuned. Fake quantization is added into 
-forward propagation. Since quantization is either not differentiable or has derivative 0 depends on the input value, we use Straight Through 
-Estimator (STE) to approximate its derivative during backward propagation: . Quantization of each tensor is defined by range. We determine the 
-range by 99.999% percentile calibration for both activation and weight. Values outside the range are clamped. A hHistogram of weights is 
-collected on the pretrained model weights. For activation, we fed 512 images in training set to collect the histogram. After determininged 
-the range offline, we fine tune the quantized network for 15 epochs. The pretrained model is from torchvision.
+For INT8 inference, the standard technique is to take the trained network, run a calibration dataset and use the results to
+set the quantization parameters for the layers.  Unfortunately, using this technique for INT4 doesn't work well.  Too much
+information is lost during the quantization and the network accuracy suffers badly.   To resolve this problem, we start with a
+pre-trained model (the standard torchvision model).  We run a calibration dataset and collect range and histogram data for both
+activations and model weights.   Next, we add "fake" FP32 quantization layers to model.  The initial parameters for these 
+quantization layers are set using the collected range data.  Note, it's still an all FP32 model.  Then we run training epochs 
+to fine tune the network and quantization layers. The process works as follows:
+
+1)  Run the calibration dataset through the "quantized" FP32 model and collect histogram data
+2)  Use KL divergence to choose new quantization ranges that minimize information loss between the histograms
+3)  Adjust the quantization layers in the model with the new ranges
+4)  Run an epoch of the training dataset through the quantized model and back propagate the errors, using a
+    Straight Through Estimator (STE) for the quantization layers
+
+Continue training until the accuracy reaches acceptable levels, typically about 15 epochs.  Once complete, the model is fine
+tuned and a quantized INT4 model can be generated using the range data from the "fake" quantization layers.  For more 
+information about the fine tuning process, please see: ....
+
+##4. RE-LINKING WITH ALTERNATE LOADGEN TOOLS
  
+There might be a desire to run the INT4 harness with a user-specified loadgen library. 
+
+It is assumed that the user has pre-compiled mlperf_loadgen.so by following these steps (ref: https://github.com/mlperf/inference/blob/master/loadgen/README_BUILD.md):
+
+git clone --recurse-submodules https://github.com/mlperf/inference.git mlperf_inference
+
+LOADGEN_DIR=<Path> (e.g. ${PWD}/mlperf_inference/inference/loadgen)
+CUDA_PATH=<Path for CUDA toolkit e.g. /usr/local/cuda-10.1>
+cd $LOADGEN_ DIR
+CFLAGS="-std=c++14 -O3" python setup.py bdist_wheel
+
+To produce a new int4_offline executable, the following command can be used:
+            	cd harness/harness_offline/harness_offline_int4
+            	make -j CUDA=${CUDA_PATH} LOADGEN_PATH=${LOADGEN_DIR} clean
+            	make -j CUDA=${CUDA_PATH} LOADGEN_PATH=${LOADGEN_DIR} all
 
