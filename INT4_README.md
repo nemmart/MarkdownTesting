@@ -27,7 +27,7 @@ To run the INT4 tool:
 
 ```./int4_offline -h/--help shows the available command line options```
  
-|Useful&nbsp;options:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;||
+|Useful&nbsp;options:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;||
 |---|---|
 |-b / --batch_size \<n\>|This is equivalent to perfSampleCount in loadgen terminology and defines how many images are processed per batch. (Max supported value: Tesla T4: 512, Titan RTX: 1024)|
 |-p / --tensorPath \<path\>|Disk location <path> for sample images|
