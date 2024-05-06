@@ -1,75 +1,156 @@
-### XMP 2.0 Beta Release (Oct 2018)
+# Uniform Random Scalars
 
-Some new junk
+## Introduction
 
-The XMP 2.0 library provides a set of APIs for doing fixed size, unsigned multiple precision integer arithmetic in CUDA.   The library provides these APIs under the name Cooperative Groups Big Numbers (CGBN).   The idea is that a cooperative group of threads will work together to represent and process operations on each big numbers.   This beta release targets high performance on small to medium sized big numbers:  32 bits through 32K bits (in 32 bit increments) and operates with 4, 8, 16 or 32 threads per CGBN group / big number instance.
+The following is an update to Yrrid Software's and [Snarkify](https://snarkify.io/) (joint team) submission to the 2023 
+Z-Prize MSM on the GPU competition.
 
-### Why use CGBN?
+We start with our latter submission to the ZPrize (it was submitted a few days after the competition closed) which was
+the fastest GPU MSM submission and here we update the code to support our uniformly distributed scalars idea.
 
-CGBN imposes some constraints on the developer (discussed below), but within those constraints, it's **_really_** fast. 
+## ZPrize vs Real World Proof Systems
 
-In the following table, we compare the speed-up of CGBN on running a Tesla V100 (Volta) GPU vs. an Intel Xeon 20-Core E5-2698v4 running at 2.2 GHz 
-with GMP 6.1.2 and OpenMP for parallelization:
+The ZPrize competitions have been using uniformly random IID generated scalars.  This means that the count of points in each Pippenger buckets are 
+fairly evenly distributed -- technically, the number of points in each bucket is sampled from something close to a normal distribution.   Now 
+it turns out, with a real word proof system the scalars aren't uniformly distributed.  Small scalars, such as 1, 2, 4, 8, -1, -2, etc, occur 
+far more frequently than others.  This means that some Pippenger buckets can have thousands of points, while most only have a few dozen.  
 
-|_operation_| 128 bits | 256 bits | 512 bits | 1024 bits | 2048 bits | 3072 bits | 4096 bits | 8192 bits |_avg speed-up_|
-|-----------|:--------:|:--------:|:--------:|:---------:|:---------:|:---------:|:---------:|:---------:|:------------:|
-|add        | 174.3    | 134.3    | 107.4    | 61.9      | 47.0      | 33.1      | 32.6      | 28.6      | 77.4         |
-|sub        | 159.5    | 133.0    | 106.4    | 63.0      | 51.8      | 36.7      | 35.2      | 31.4      | 77.1         |
-|mul (low)  | 172.9    | 50.9     | 30.0     | 17.8      | 22.6      | 19.4      | 20.2      | 14.6      | 43.5         |
-|mont_reduce| 34.4     | 34.0     | 37.2     | 28.2      | 27.1      | 24.6      | 24.0      | 24.2      | 29.3         |
-|powm_odd   | 22.1     | 24.6     | 24.5     | 21.0      | 22.0      | 19.8      | 20.1      | 16.8      | 21.4         |
-|div_qr     | 30.0     | 20.4     | 18.7     | 11.8      | 9.5       | 8.3       | 8.9       | 7.8       | 14.4         |
-|sqrt       | 27.0     | 17.1     | 16.8     | 9.4       | 7.2       | 4.8       | 4.3       | 3.4       | 11.3         |
-|gcd        | 3.1      | 7.6      | 7.9      | 7.3       | 8.4       | 8.4       | 7.6       | 5.1       | 6.9          |
-|mod inv    | 2.7      | 2.5      | 2.5      | 5.2       | 5.4       | 5.6       | 4.9       | 4.0       | 4.1          |
+There are some solutions for this that are known, for example assigning multiple threads to larger buckets.  But these approaches are complex
+to implement and if not implemented with great care, there is the potential for timing attacks that could compromise the proof system security.
 
-&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; **Speed-Up Table:  Tesla V100 vs. Xeon E5-2698v4 at 2.2 GHz (20 cores)**
+We have discovered a solution, which we believe is simple, elegant, and efficient.
 
-These performance results were generated with the perf_tests tools provided with the library.
+## Our Solution
 
-### Installation
+We are given n fixed points, $P_1, P_2 ... P_n$ and $n$ variable scalars, $s_1, s_2, ... s_n$, and we need to compute:
 
-To install this package, create a directory for the CGBN files, and untar the CGBN-<date>.tar.gz package.
+   $$MSM(s, P) = \sum_{i\in 1 .. n}{si * Pi}$$
 
-CGBN relies on two open source packages which must be installed before running the CGBN makefile.   These are the GNU Multiple Precision Library (GMP) and the Google Test framework (gtest).   If GMP is not installed as a local package on your system, you can built a local copy for your use as follows.
+Our solution. One time setup -- pre-generate $n$ IID uniform random scalars, $r_1, r_2, r_3, ... r_n$.   Then precompute a single 
+point:  
 
-* Download GMP from http://www.gmplib.org
-* Create a directory to hold the include files and library files
-* Set the environment variable GMP_HOME to be your
-* Configure GMP with `./configure --prefix=$GMP_HOME`
-* Build and install GMP normally (we recommend that you also run make test).
+   $$P_r = MSM(r, P) = \sum_{i\in 1 .. n}{r_i * P_i}$$
 
-If GMP is installed on your local system on the standard include and library paths, no action is needed.
+Then, to compute an MSM(s, P), we now compute:
 
-CGBN also requires the Google Test framework source.  If this is installed on your system, set the environment variable GTEST_HOME to point to the source, if it's not installed, we provide a `make download-gtest` in the main CGBN makefile that will download and unpack the Google Test framework into the CGBN directory, where all the makefiles will find it automatically.
+   $$MSM(s, P) = -P_r + \sum_{i\in 1 .. n}{(s_i + r_i) * P_i}$$
+     
+Note since $r_i$ was IID and uniformly distributed, $s_i + r_i$ will be IID and uniformly distributed, and therefore, we have solved the
+bucket problem.
 
-Once GMP and the Google Test framework are set up, the CGBN samples, unit tests, and performance tests can be built with `make <arch>` where _\<arch\>_ is one of kepler, maxwell, pascal, volta.   The compilation takes several minutes due to the large number of kernels that must built.  CGBN requires CUDA 9.2 for Volta and CUDA 9.0 (or later) for Kepler, Maxwell, and Pascal.
+## Overhead Analysis
 
-### Running Unit Tests
+At the start we have a one time cost of randomly generating scalars and a single n point MSM.
 
-Once the unit tests have been compiled for the correct architecture, simply run the tester in the unit_tests directory.  This will run all tests on CUDA device zero.  To use a different GPU, set the environment variable CUDA_VISIBLE_DEVICES.
+On each run we have the overhead of $n$ scalar additions, and 1 EC point subtraction.  
 
-### Running the Performance Tests
 
-Once the performance tests have been compiled for the correct architecture, simply run the xmp_tester.  This will performance test a number of core CGBN APIs, print the information in a easily readily form and write a **_gpu\_throughput\_report.csv_** file.   To generate GMP performance results for the same tests, run `make gmp-run` or `make gmp-numactl-run`.   The latter uses **numactl** to bind the GMP threads to a single CPU, for socket to socket comparisons.   The make targets gmp-run and gmp-numactl-run both print the report in a readable format as well as generate a **_cpu\_throughput\_report.csv_** file.   Speedups are easily computed by loading the two .csv files into a spreadsheet.
+## Competition Objective
 
-### Development - Getting Started
+The objective for this competition is to compute a batch of 4 MSMs of size 2^24 on an RTX A5000 Ada Generation GPU card, and support 
+two curves, BLS-12377-G1 and BLS-12381-G1.  The process is as follows.  First a set of 2^24 base points are constructed on the
+CPU.  These are copied over to the GPU, and the GPU implementation has the opportunity to perform limited pre-computations.
+Next 4 sets of 2^24 scalars are generated (on the CPU) and the timer is started.  The scalars must be copied over to the GPU
+and the GPU implementation must compute 4 MSM values, one for each set against the fixed base points.  The timer is stopped 
+once the GPU returns the 4 MSM results.
 
-There are four samples included with the library, which can be found in the samples directory.  Sample 1 shows the simplest kernel, adding two vectors of CGBNs.  Sample 2 shows two implementations of a simple modular inverse algorithm (requires odd moduli).   Sample 3 shows how to write a fast powm kernel for odd moduli (this implementation is much faster than the one included in the library, but it requires an odd modulus, whereas the library API works for even moduli).  Sample 4 uses the same powm kernel to implement Miller-Rabin prime testing.
+## Thanks
 
-For reference documentation, please see the CGBN.md file in the docs directory.
+A heartfelt thank you to Robert Remen from Matter Labs and John Bartlett from Snarkify for their assistance in performancing
+testing some of the components this submission.
 
-### Limitations
+## Building and running the submission
 
-The CGBN APIs currently have a number of limitations:
+To run this code, install rust (for example `rustup install stable`).  Clone this repository, and in a shell, run the
+following commands:
+```
+cd zprize-2023-submission-gpu
+cargo bench --features gpu
+```
 
-*  CGBN currently requires 4, 8, 16 or 32 thread per CGBN group.
-*  Only sizes up to 32K bits are supported.  The size must be evenly divisible by 32.
-*  Each cgbn_env_t can only be instantiated at a fixed size.  There is no support for mixing sizes within an environment (other than the cgbn_wide_t).
-*  You can instantiate two cgbn_env_t instances in the same kernel with different sizes, but copying values between them is very slow.
-*  Performance of some APIs (such as GCD) are not optimal.  Performance will likely improve in future releases.
+## Approach
 
-### Questions and Comments
+On the GPU, an MSM is typically done using Pippenger's algorithm in 3 steps.  First is a *planning* step, where the scalars
+are sliced up and the data is sorted, such that there is a list of points to be added to each bucket.  Second is the
+*accumulation* phase, where we add the points in each bucket's list to compute the bucket value.  The third step is the
+*reduction* phase, where we add the buckets together to compute window sums using the sum of sums algorithm.
 
-If you have any questions or comments, please drop a line to nemmart@nvidia.com and jluitjens@nvidia.com.  We look forward to your feedback.
+My original plan for this competition was to build a better sorting implementation, and whole suite of accumulation implementations
+using different point representations and then submit the ones that turned out to be the fastest.  The plan was to support Twisted 
+Edwards, batched affine, and xyzz on BLS12377, and batched affine and xyzz on BLS381.  Yrrid entered four ZPrize competitions this year,
+and unfortunately due to time constraints, had to cut some ideas.  We ended up building the improved  sorter, Twisted Edwards, and XYZZ, 
+but batched affine didn't make the cut.  Batched affine requires a low latency field inversion routine.  We have made some progress, 
+with an implementation that runs 32 instances across a warp in about 40K cycles.  But it is still a work in progress.
 
+## Point Representations and Run Times
+
+| Curve | Point Representation / implementation | MSM Run Time (MS) |
+|---|---|---|
+| bls12377 | Extended Jacobian (XYZZ + XY) / ML | 426 | 
+| bls12377 | Extended Jacobian (XYZZ + XY) / Yrrid| 420 | 
+| bls12377 | Twisted Edwards (XYTZ + XYT) | 373 |
+| bls12377 | Twisted Edwards (XYTZ + XY) | 356 | 
+| bls12381 | Extended Jacobian (XYZZ + XY) / Yrrid| 441 | 
+| bls12381 | Extended Jacobian (XYZZ + XY) / ML | 436 | 
+
+Discussion.   We have a framework where it is fairly easy to add curve implementations, so along with the Yrrid
+curves, we incorporated Matter Labs XYZZ implementations from last year's ZPrize.  These are tagged as ML in the 
+table above.  For BLS12377, Yrrid's XYZZ seems marginally faster.  For BLS12381, Matter Labs' XYZZ is marginally faster.
+For Twisted Edwards, we have two implementations.   XYTZ + XYT and XYTZ + XY.  The former requires loading of three 
+field values (X, Y, and T) per 7-modmul EC add, whereas the latter loads two fields (X, Y) and uses a non-unified
+8-modmul adder.  Ada generation GPU cards, have a lot of compute and a big L2 cache, but make compromises in the 
+memory bandwidth as compared to previous generations.  As a result of the limited memory bandwidth, we see a good
+jump in performance going from XYTZ + XYT to XYTZ + XY, even though the latter requires more modmul operations.
+
+## Optimizations in our solution
+
+In this section, we give a high level overview of the optimizations we have used to accelerate the computation:
+
+-  Pippenger bucket algorithm with a 23-bit windows for BLS12377 and 22-bit windows for BLS12381.
+-  Scalar preprocessing.  We process the scalars to ensure that buckets are as uniformly distributed as possible.
+   This is described in detail in a section below.
+-  We take advantage of the signed digits endormorphism to reduce the number of buckets required for the MSM computation.
+   We do not currently use the cube root endomorphism.
+-  Use very fast custom sorting algorithms to generate lists of points for each bucket.   
+-  The buckets are then sorted, based on the number of points in each bucket.   The buckets with the most points are run 
+   first.  This allows the GPU warps to run convergent workloads and minimizes the tail effect.
+-  For each point Pi, we precompute 11 (BLS12377) or 12 (BLS12381) multiples of the point.  This allows us to
+   use only a single window during accumulation and reduction.  This greatly reduces the number of buckets required and 
+   speeds up the reduction phase.
+-  Overlap the copying (host -> device) of the scalar data for the next MSM with computation of the current MSM.
+-  Implemented new host code for the final summation in the reduction phase.  It's much faster and supports both curves.
+-  The FF and EC routines have been carefully optimized:  
+   - Based on Montgomery multiplication 
+   - Use the even/odd alignment algorithms that maximize modmul perf on the GPU
+   - Minimize correction steps in the FF operations
+   - Try multiple point representations and pick the fastest
+   - Use fast squaring
+   - The Matter Labs XYZZ implementation takes advantage of the following optimization:  `REDC(a*b) + REDC(c*d) = REDC(a*b + c*d)`
+
+## Scalar Preprocessing
+
+Our goal with the preprocessing is to insure the distribution of points to buckets is as uniform as possible.  For BLS12377,
+the scalar field size, _b_, is 253, and _c_, the number of bits in each window is 23.  For BLS1281, we have _b_ is 255 and
+_c_ is 22.   Let N be the scalar field prime.  Let si and Pi be the ith scalar and point.   For BLS12377, we have the scenario 
+where _c_ exactly divides _b_.  Here we check if the most significant bit of si is set, if so, we replace si and Pi with N-si and -Pi.
+Then we proceed normally.  For BLS12381, we have ceil(b/c)=12 windows.  12*22 is 264.  Here we run into a problem -- our scalar is
+just 255 bits in length, so approximately 99% of the buckets in the top window are empty, and the remaining 1% have thousands of points each.
+One possible solution is to pick a uniform random whole number _u_ in the range of [0, 281], and then replace the scalar si with si+u*N.
+Note, adding a multiple of N to a scalar does not change the MSM result.  In our solution, rather than generating random numbers, we 
+simply choose `u=i % 282`.   282 happens to be the largest multiple of N less than 2^263.  The result is not a perfectly uniform distribution,
+but in practice, it's close enough.
+
+## Twisted Edwards and Supporting Files
+
+In Hardcaml's 2022 ZPrize submission, they used a Twisted Edwards version of BLS12377G1 for their FPGA solution.  They noted there are
+5 points that satisfy the curve equation that can not be converted from Short Weierstrass form to Twisted Edwards form.  But they left
+open the question of whether any of the 5 points are in the set of BLS12377G1 point.  We have provided a definitive proof that the five
+points are not part of the BLS12377G1 curve, and therefore, we can use the Twisted Edwards version of BLS12377G1 without having to worry 
+about any special cases.  Please see the `yrrid-supporting-files/TwistedEdwards` directory.
+
+Our codes also use a number of bounds assertions in order to minimize the correction steps.  The directory `yrrid-supporting-files/AssertionCheckers`
+contains some Java code for checking the assertions.
+
+## Questions
+
+For technical questions about this submission, please contact `nemmart at yrrid.com`.
