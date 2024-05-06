@@ -24,16 +24,16 @@ We have discovered a solution, which we believe is simple, elegant, and efficien
 
 We are given n fixed points, $P_1, P_2 ... P_n$ and $n$ variable scalars, $s_1, s_2, ... s_n$, and we need to compute:
 
-   $$MSM(s, P) = \sum_{i\in 1 .. n}{s_i * P_i}$$
+   $$\mbox{MSM}(s, P) = \sum_{i\in 1 .. n}{s_i * P_i}$$
 
 One time setup step: pregenerate $n$ IID uniform random scalars, $r_1, r_2, r_3, ... r_n$ and precompute a single 
 point:  
 
-   $$P_r = MSM(r, P) = \sum_{i\in 1 .. n}{r_i * P_i}$$
+   $$P_r = \mbox{MSM}(r, P) = \sum_{i\in 1 .. n}{r_i * P_i}$$
 
 To compute an MSM(s, P), we now compute:
 
-   $$MSM(s, P) = \Big(\sum_{i\in 1 .. n}{(s_i + r_i) * P_i}\Big) - P_r$$
+   $$\mbox{MSM}(s, P) = \mbox{MSM}(s+r, P) - P_r = \Big(\sum_{i\in 1 .. n}{(s_i + r_i) * P_i}\Big) - P_r$$
      
 Note since $r_i$ was IID and uniformly distributed, $s_i + r_i$ will be IID and uniformly distributed, and therefore, we have solved the
 bucket problem.
