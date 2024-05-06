@@ -24,14 +24,14 @@ We have discovered a solution, which we believe is simple, elegant, and efficien
 
 We are given n fixed points, $P_1, P_2 ... P_n$ and $n$ variable scalars, $s_1, s_2, ... s_n$, and we need to compute:
 
-   $$MSM(s, P) = \sum_{i\in 1 .. n}{si * Pi}$$
+   $$MSM(s, P) = \sum_{i\in 1 .. n}{s_i * P_i}$$
 
-Our solution. One time setup -- pre-generate $n$ IID uniform random scalars, $r_1, r_2, r_3, ... r_n$.   Then precompute a single 
+Our solution. One time setup -- pregenerate $n$ IID uniform random scalars, $r_1, r_2, r_3, ... r_n$.   Then precompute a single 
 point:  
 
    $$P_r = MSM(r, P) = \sum_{i\in 1 .. n}{r_i * P_i}$$
 
-Then, to compute an MSM(s, P), we now compute:
+Next, to compute an MSM(s, P), we now compute:
 
    $$MSM(s, P) = -P_r + \sum_{i\in 1 .. n}{(s_i + r_i) * P_i}$$
      
@@ -44,6 +44,25 @@ At the start we have a one time cost of randomly generating scalars and a single
 
 On each run we have the overhead of $n$ scalar additions, and 1 EC point subtraction.  
 
+## Run Time Results
+
+We have implemented the uniform scalars idea in this repo, and comparing the MSM run-times using the randoms vs a control run where
+they are not used, are almost identical.  The overhead is much less than the run to run variation.  But to put a number on it, the
+random scalars overhead is less than 1% of the total MSM run time.
+
+## Questions
+
+For technical questions, please feel free to email me at nemmart at yrrid.com.
+
+
+-----------------------------------------------------------------------------------------
+
+
+# Z-Prize MSM on the GPU Submission
+
+##Performance
+
+Our run times are 357 ms (bls12377) and 436 ms (bls12381)
 
 ## Competition Objective
 
