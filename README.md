@@ -33,7 +33,7 @@ point:
 
 To compute an MSM(s, P), we now compute:
 
-   $$MSM(s, P) = -P_r + \sum_{i\in 1 .. n}{(s_i + r_i) * P_i}$$
+   $$MSM(s, P) = \Big(\sum_{i\in 1 .. n}{(s_i + r_i) * P_i}\Big) - P_r$$
      
 Note since $r_i$ was IID and uniformly distributed, $s_i + r_i$ will be IID and uniformly distributed, and therefore, we have solved the
 bucket problem.
