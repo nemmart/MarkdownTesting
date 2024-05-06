@@ -15,7 +15,7 @@ fairly evenly distributed -- technically, the number of points in each bucket is
 it turns out, with a real word proof system the scalars aren't uniformly distributed.  Small scalars, such as 1, 2, 4, 8, -1, -2, etc, occur 
 far more frequently than others.  This means that some Pippenger buckets can have thousands of points, while most only have a few dozen.  
 
-There are some solutions for this that are known, for example assigning multiple threads to larger buckets.  But these approaches are complex
+There are some known solutions for this problem, for example assigning multiple threads to larger buckets.  But these approaches are complex
 to implement and if not implemented with great care, there is the potential for timing attacks that could compromise the proof system security.
 
 We have discovered a solution, which we believe is simple, elegant, and efficient.
@@ -26,12 +26,12 @@ We are given n fixed points, $P_1, P_2 ... P_n$ and $n$ variable scalars, $s_1, 
 
    $$MSM(s, P) = \sum_{i\in 1 .. n}{s_i * P_i}$$
 
-Our solution. One time setup -- pregenerate $n$ IID uniform random scalars, $r_1, r_2, r_3, ... r_n$.   Then precompute a single 
+One time setup step: pregenerate $n$ IID uniform random scalars, $r_1, r_2, r_3, ... r_n$ and precompute a single 
 point:  
 
    $$P_r = MSM(r, P) = \sum_{i\in 1 .. n}{r_i * P_i}$$
 
-Next, to compute an MSM(s, P), we now compute:
+To compute an MSM(s, P), we now compute:
 
    $$MSM(s, P) = -P_r + \sum_{i\in 1 .. n}{(s_i + r_i) * P_i}$$
      
@@ -40,9 +40,9 @@ bucket problem.
 
 ## Overhead Analysis
 
-At the start we have a one time cost of randomly generating scalars and a single n point MSM.
+We have the one time costs of randomly generating scalars and a single $n$ point MSM.
 
-On each run we have the overhead of $n$ scalar additions, and 1 EC point subtraction.  
+Then on each run we have the overhead of $n$ scalar additions, and 1 EC point subtraction.  
 
 ## Run Time Results
 
@@ -53,7 +53,6 @@ random scalars overhead is less than 1% of the total MSM run time.
 ## Questions
 
 For technical questions, please feel free to email me at nemmart at yrrid.com.
-
 
 -----------------------------------------------------------------------------------------
 
